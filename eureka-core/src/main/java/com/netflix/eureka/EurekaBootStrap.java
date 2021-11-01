@@ -110,7 +110,9 @@ public class EurekaBootStrap implements ServletContextListener {
     @Override
     public void contextInitialized(ServletContextEvent event) {
         try {
+            //初始化环境
             initEurekaEnvironment();
+            //初始化上下文
             initEurekaServerContext();
 
             ServletContext sc = event.getServletContext();
@@ -145,6 +147,7 @@ public class EurekaBootStrap implements ServletContextListener {
      * init hook for server context. Override for custom logic.
      */
     protected void initEurekaServerContext() throws Exception {
+        //加载Eureka配置文件
         EurekaServerConfig eurekaServerConfig = new DefaultEurekaServerConfig();
 
         // For backward compatibility
@@ -158,19 +161,24 @@ public class EurekaBootStrap implements ServletContextListener {
         ApplicationInfoManager applicationInfoManager = null;
 
         if (eurekaClient == null) {
+            //初始化服务配置实例 InstanceConfig start
             EurekaInstanceConfig instanceConfig = isCloud(ConfigurationManager.getDeploymentContext())
                     ? new CloudInstanceConfig()
                     : new MyDataCenterInstanceConfig();
             
             applicationInfoManager = new ApplicationInfoManager(
                     instanceConfig, new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get());
-            
+            //初始化服务配置实例 InstanceConfig end
+            //初始化EurekaClient Start
+            //初始化ClientConfig
             EurekaClientConfig eurekaClientConfig = new DefaultEurekaClientConfig();
             eurekaClient = new DiscoveryClient(applicationInfoManager, eurekaClientConfig);
+            //初始化EurekaClient End
         } else {
             applicationInfoManager = eurekaClient.getApplicationInfoManager();
         }
 
+        //注册相关的流程 Start
         PeerAwareInstanceRegistry registry;
         if (isAws(applicationInfoManager.getInfo())) {
             registry = new AwsInstanceRegistry(
@@ -182,6 +190,7 @@ public class EurekaBootStrap implements ServletContextListener {
             awsBinder = new AwsBinderDelegate(eurekaServerConfig, eurekaClient.getEurekaClientConfig(), registry, applicationInfoManager);
             awsBinder.start();
         } else {
+            //注册对象
             registry = new PeerAwareInstanceRegistryImpl(
                     eurekaServerConfig,
                     eurekaClient.getEurekaClientConfig(),
@@ -190,6 +199,7 @@ public class EurekaBootStrap implements ServletContextListener {
             );
         }
 
+        //集群节点帮助类
         PeerEurekaNodes peerEurekaNodes = getPeerEurekaNodes(
                 registry,
                 eurekaServerConfig,
@@ -198,6 +208,7 @@ public class EurekaBootStrap implements ServletContextListener {
                 applicationInfoManager
         );
 
+        //创建DefaultEurekaServerContext 默认上下文
         serverContext = new DefaultEurekaServerContext(
                 eurekaServerConfig,
                 serverCodecs,
@@ -212,6 +223,7 @@ public class EurekaBootStrap implements ServletContextListener {
         logger.info("Initialized server context");
 
         // Copy registry from neighboring eureka node
+        //从相邻节点拷贝注册信息
         int registryCount = registry.syncUp();
         registry.openForTraffic(applicationInfoManager, registryCount);
 
