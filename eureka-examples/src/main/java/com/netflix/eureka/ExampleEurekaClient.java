@@ -48,6 +48,7 @@ public class ExampleEurekaClient {
 
     private static synchronized ApplicationInfoManager initializeApplicationInfoManager(EurekaInstanceConfig instanceConfig) {
         if (applicationInfoManager == null) {
+            //构造InstanceInfo实例
             InstanceInfo instanceInfo = new EurekaConfigBasedInstanceInfoProvider(instanceConfig).get();
             applicationInfoManager = new ApplicationInfoManager(instanceConfig, instanceInfo);
         }
@@ -118,7 +119,9 @@ public class ExampleEurekaClient {
         ExampleEurekaClient sampleClient = new ExampleEurekaClient();
 
         // create the client
+        //实例信息管理器
         ApplicationInfoManager applicationInfoManager = initializeApplicationInfoManager(new MyDataCenterInstanceConfig());
+        //构造 EurekaClient
         EurekaClient client = initializeEurekaClient(applicationInfoManager, new DefaultEurekaClientConfig());
 
         // use the client

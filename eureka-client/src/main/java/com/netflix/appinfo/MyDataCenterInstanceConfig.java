@@ -30,6 +30,9 @@ import javax.inject.Singleton;
 @ProvidedBy(MyDataCenterInstanceConfigProvider.class)
 public class MyDataCenterInstanceConfig extends PropertiesInstanceConfig implements EurekaInstanceConfig {
 
+    /**
+     * 父类会加载eureka-client.properties配置文件
+     */
     public MyDataCenterInstanceConfig() {
     }
 
