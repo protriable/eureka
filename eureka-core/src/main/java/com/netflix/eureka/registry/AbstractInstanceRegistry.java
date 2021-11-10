@@ -586,7 +586,8 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
 
     public void evict(long additionalLeaseMs) {
         logger.debug("Running the evict task");
-
+        //判断自动保护是否开启，如果开启了自动保护，
+        //那么剔除服务的操作就不往下执行，就不会剔除服务了
         if (!isLeaseExpirationEnabled()) {
             logger.debug("DS: lease expiration is currently disabled.");
             return;
@@ -1187,6 +1188,11 @@ public abstract class AbstractInstanceRegistry implements InstanceRegistry {
         responseCache.invalidate(appName, vipAddress, secureVipAddress);
     }
 
+    /**
+     * 期望每分钟最小的续约次数 = 期望正常续约的服务实例数 * (60/(我们配置的发送一次心跳时间间隔（默认30秒）))*0.85
+     * serverConfig.getRenewalPercentThreshold() 默认是 0.85
+     * （可以通过eureka.server.renewal-percent-threshold）进行配置
+     **/
     protected void updateRenewsPerMinThreshold() {
         this.numberOfRenewsPerMinThreshold = (int) (this.expectedNumberOfClientsSendingRenews
                 * (60.0 / serverConfig.getExpectedClientRenewalIntervalSeconds())

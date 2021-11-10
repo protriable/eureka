@@ -479,10 +479,17 @@ public class PeerAwareInstanceRegistryImpl extends AbstractInstanceRegistry impl
 
     @Override
     public boolean isLeaseExpirationEnabled() {
+        //首先判断是否在配置文件中关闭了自我保护，如果关闭了自我保护直接返回true，
+        // evict方法也就可以继续往下执行，进行无用服务剔除操作
         if (!isSelfPreservationModeEnabled()) {
             // The self preservation mode is disabled, hence allowing the instances to expire.
             return true;
         }
+        //如果开启了自我保护机制，则进一步判断是否开启自我保护机制
+        //numberOfRenewsPerMinThreshold(每分钟最小的续约次数)大于0
+        //而且getNumOfRenewsInLastMin(最后一分钟的续约次数)必须要大于每分钟最小的续约次数
+        //当满足上面两个条件时则说明续约正常，返回true，evict方法也就可以继续往下执行，进行无用服务剔除操作
+        //所以说，只有不满足上述两个条件的情况下，才会返回false，evict方法也就不在往下执行，即使有没有正常续约的服务，也不会剔除
         return numberOfRenewsPerMinThreshold > 0 && getNumOfRenewsInLastMin() > numberOfRenewsPerMinThreshold;
     }
 
